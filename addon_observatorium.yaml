@@ -1,0 +1,262 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: observatorium-xyz-trusted-ca
+  labels:
+    config.openshift.io/inject-trusted-cabundle: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: observatorium-xyz-ca
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    # https://docs.openshift.com/container-platform/4.11/authentication/using-service-accounts-as-oauth-client.html
+    serviceaccounts.openshift.io/oauth-redirectreference.test-oidc: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"simplest"}}'
+  labels:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: observatorium-xyz
+    app.kubernetes.io/name: observatorium-api
+    app.kubernetes.io/part-of: observatorium
+    app.kubernetes.io/version: main-2022-03-03-v0.1.2-139-gb3a1918
+  name: observatorium-xyz-observatorium-api
+---
+apiVersion: v1
+data:
+  rbac.yaml: |-
+    "roleBindings":
+      - "name": "test"
+        "roles":
+          - "read-write"
+        "subjects":
+          - "kind": "user"
+            "name": "system:serviceaccount:ploffay:simplest-collector"
+          - "kind": "user"
+            "name": "kube:admin"
+          - "kind": "user"
+            "name": "developer"
+          - "kind": "user"
+            "name": "kubeadmin"
+    "roles":
+      - "name": "read-write"
+        "permissions":
+          - "read"
+          - "write"
+        "resources":
+          - "logs"
+          - "metrics"
+          - "traces"
+        "tenants":
+          - "test-oidc"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: observatorium-xyz
+    app.kubernetes.io/name: observatorium-api
+    app.kubernetes.io/part-of: observatorium
+    app.kubernetes.io/version: main-2022-03-03-v0.1.2-139-gb3a1918
+  name: observatorium-xyz-observatorium-api
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: observatorium-xyz-observatorium-api
+rules:
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["tokenreviews"]
+    verbs: ["create"]
+  - apiGroups: ["authorization.k8s.io"]
+    resources: ["subjectaccessreviews"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+# This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
+kind: ClusterRoleBinding
+metadata:
+  name: observatorium-xyz-observatorium-api
+subjects:
+  - kind: ServiceAccount
+    name: observatorium-xyz-observatorium-api # Name is case sensitive
+    namespace: ploffay
+roleRef:
+  kind: ClusterRole
+  name: observatorium-xyz-observatorium-api
+  apiGroup: rbac.authorization.k8s.io
+---
+# tenants.yaml config file https://github.com/observatorium/api/blob/15c93dc75b58cc95ef3ac1d46dce9ac5f64e1116/main.go#L182
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: observatorium-xyz
+    app.kubernetes.io/name: observatorium-api
+    app.kubernetes.io/part-of: observatorium
+    app.kubernetes.io/version: main-2022-03-03-v0.1.2-139-gb3a1918
+  name: observatorium-xyz-observatorium-api
+stringData:
+  tenants.yaml: |-
+    "tenants":
+    - "id": "1610b0c3-c509-4592-a256-a1871353dbfa"
+      "name": "test-oidc"
+      "openshift":
+        "serviceAccount": "observatorium-xyz-observatorium-api"
+        "redirectURL": "https://simplest-ploffay.apps-crc.testing/openshift/test-oidc/callback"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: observatorium-xyz
+    app.kubernetes.io/name: observatorium-api
+    app.kubernetes.io/part-of: observatorium
+    app.kubernetes.io/version: main-2022-03-03-v0.1.2-139-gb3a1918
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: observatorium-xyz-observatorium-api-serving-tls
+  name: observatorium-xyz-observatorium-api
+spec:
+  ports:
+    - appProtocol: h2c
+      name: grpc-public
+      port: 8090
+      targetPort: 8090
+    - appProtocol: http
+      name: internal
+      port: 8081
+      targetPort: 8081
+    - appProtocol: http
+      name: public
+      port: 8080
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: observatorium-xyz
+    app.kubernetes.io/name: observatorium-api
+    app.kubernetes.io/part-of: observatorium
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: observatorium-xyz
+    app.kubernetes.io/name: observatorium-api
+    app.kubernetes.io/part-of: observatorium
+    app.kubernetes.io/version: main-2022-03-03-v0.1.2-139-gb3a1918
+  name: observatorium-xyz-observatorium-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: api
+      app.kubernetes.io/instance: observatorium-xyz
+      app.kubernetes.io/name: observatorium-api
+      app.kubernetes.io/part-of: observatorium
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: api
+        app.kubernetes.io/instance: observatorium-xyz
+        app.kubernetes.io/name: observatorium-api
+        app.kubernetes.io/part-of: observatorium
+        app.kubernetes.io/version: main-2022-03-03-v0.1.2-139-gb3a1918
+    spec:
+      containers:
+        - args:
+            - --tls.server.cert-file=/etc/observatorium/tls-serving/tls.crt
+            - --tls.server.key-file=/etc/observatorium/tls-serving/tls.key
+            - --traces.tls.ca-file=/etc/observatorium/tls-ca/service-ca.crt
+            - --web.listen=0.0.0.0:8080
+            - --web.internal.listen=0.0.0.0:8081
+            - --log.level=debug
+            - --traces.write.endpoint=tempo-simplest-distributor:4317
+            - --traces.read.endpoint=http://tempo-simplest-query-frontend:16686
+            - --grpc.listen=0.0.0.0:8090
+            - --rbac.config=/etc/observatorium/rbac.yaml
+            - --tenants.config=/etc/observatorium/tenants.yaml
+          image: pavolloffay/observatorium-api:main-2022-11-29-v0.1.2-287-g0ad5c60-dirty4
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /live
+              port: 8081
+              scheme: HTTP
+            periodSeconds: 30
+          name: observatorium-api
+          ports:
+            - containerPort: 8090
+              name: grpc-public
+            - containerPort: 8081
+              name: internal
+            - containerPort: 8080
+              name: public
+           # TODO does not work due to TLS
+#          readinessProbe:
+#            failureThreshold: 12
+#            httpGet:
+#              path: /ready
+#              port: 8081
+#              scheme: HTTP
+#            periodSeconds: 5
+          resources: {}
+          volumeMounts:
+            - mountPath: /etc/observatorium/rbac.yaml
+              name: rbac
+              readOnly: true
+              subPath: rbac.yaml
+            - mountPath: /etc/observatorium/tenants.yaml
+              name: tenants
+              readOnly: true
+              subPath: tenants.yaml
+            - name: serving-tls
+              mountPath: "/etc/observatorium/tls-serving"
+              readOnly: true
+            - name: cabundle
+              mountPath: "/etc/observatorium/tls-ca"
+              readOnly: true
+      serviceAccountName: observatorium-xyz-observatorium-api
+      volumes:
+        - name: serving-tls
+          secret:
+            secretName: observatorium-xyz-observatorium-api-serving-tls
+            optional: false
+        - configMap:
+            name: observatorium-xyz-ca
+          name: cabundle
+        - configMap:
+            name: observatorium-xyz-observatorium-api
+          name: rbac
+        - name: tenants
+          secret:
+            secretName: observatorium-xyz-observatorium-api
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: simplest
+  annotations:
+    openshift.io/host.generated: 'true'
+spec:
+  host:
+  to:
+    kind: Service
+    name: observatorium-xyz-observatorium-api
+    weight: 100
+  port:
+    targetPort: public
+  tls:
+    termination: passthrough
+  wildcardPolicy: None

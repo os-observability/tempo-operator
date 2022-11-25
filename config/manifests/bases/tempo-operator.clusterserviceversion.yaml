@@ -197,6 +197,20 @@ spec:
       - description: Tolerations defines component specific pod tolerations.
         displayName: Tolerations
         path: template.distributor.tolerations
+      - description: Gateway defines the gateway component spec.
+        displayName: Gateway pods
+        path: template.gateway
+      - description: NodeSelector is the simplest recommended form of node selection
+          constraint.
+        displayName: Node Selector
+        path: template.gateway.nodeSelector
+      - description: Replicas represents the number of replicas to create for this
+          component.
+        displayName: Component Replicas
+        path: template.gateway.replicas
+      - description: Tolerations defines component specific pod tolerations.
+        displayName: Tolerations
+        path: template.gateway.tolerations
       - description: Ingester defines the ingester component spec.
         displayName: Ingester pods
         path: template.ingester
@@ -246,6 +260,39 @@ spec:
       - description: Tolerations defines component specific pod tolerations.
         displayName: Tolerations
         path: template.queryFrontend.tolerations
+      - description: Tenants defines the per-tenant authentication and authorization
+          spec.
+        displayName: Tenants Configuration
+        path: tenants
+      - description: Authentication defines the lokistack-gateway component authentication
+          configuration spec per tenant.
+        displayName: Authentication
+        path: tenants.authentication
+      - description: TenantID defines the id of the tenant.
+        displayName: Tenant ID
+        path: tenants.authentication[0].tenantId
+      - description: TenantName defines the name of the tenant.
+        displayName: Tenant Name
+        path: tenants.authentication[0].tenantName
+      - description: Authorization defines the lokistack-gateway component authorization
+          configuration spec per tenant.
+        displayName: Authorization
+        path: tenants.authorization
+      - description: RoleBindings defines configuration to bind a set of roles to
+          a set of subjects.
+        displayName: Static Role Bindings
+        path: tenants.authorization.roleBindings
+      - description: Roles defines a set of permissions to interact with a tenant.
+        displayName: Static Roles
+        path: tenants.authorization.roles
+      - description: Mode defines the multitenancy mode.
+        displayName: Mode
+        path: tenants.mode
+        x-descriptors:
+        - urn:alm:descriptor:com.tectonic.ui:select:static
+        - urn:alm:descriptor:com.tectonic.ui:select:dynamic
+        - urn:alm:descriptor:com.tectonic.ui:select:openshif
+        - urn:alm:descriptor:com.tectonic.ui:select:openshift
       version: v1alpha1
   description: Simpilifes the deployment of tempo db.
   displayName: tempo-operator
