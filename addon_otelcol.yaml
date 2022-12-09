@@ -5,7 +5,7 @@
 apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
 metadata:
-  name: simplest
+  name: dev
 spec:
   image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.66.0
   config: |
@@ -36,7 +36,7 @@ spec:
         auth:
           authenticator: bearertokenauth
         headers:
-          X-Tenant: "test-oidc"
+          X-Scope-OrgID: "dev"
 
     service:
       telemetry:
@@ -50,15 +50,50 @@ spec:
           receivers: [otlp, jaeger]
           exporters: [otlp]
 ---
-#apiVersion: rbac.authorization.k8s.io/v1
-#kind: RoleBinding
-#metadata:
-#  name: collector-observatorium
-#roleRef:
-#  apiGroup: rbac.authorization.k8s.io
-#  kind: Role
-#  name: fixme # TODO
-#subjects:
-#  - kind: ServiceAccount
-#    name: simplest-collector
-#    namespace: ploffay
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: production
+spec:
+  image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.66.0
+  config: |
+    extensions:
+      bearertokenauth:
+        filename: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+      jaeger:
+        protocols:
+          thrift_binary:
+          thrift_compact:
+          thrift_http:
+          grpc:
+
+    processors:
+
+    exporters:
+      otlp:
+        endpoint: observatorium-xyz-observatorium-api.ploffay.svc.cluster.local:8090
+        tls:
+          insecure: false
+          ca_file: "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt"
+        auth:
+          authenticator: bearertokenauth
+        headers:
+          X-Scope-OrgID: "production"
+
+    service:
+      telemetry:
+        logs:
+          level: "DEBUG"
+          development: true
+          encoding: "json"
+      extensions: [bearertokenauth]
+      pipelines:
+        traces:
+          receivers: [otlp, jaeger]
+          exporters: [otlp]

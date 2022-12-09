@@ -34,7 +34,7 @@ memberlist:
   - {{ . }}
   {{- end }}
 metrics_generator_enabled: false
-multitenancy_enabled: false
+multitenancy_enabled: true
 overrides:
 {{- if .GlobalRateLimits.IngestionBurstSizeBytes }}
   ingestion_burst_size_bytes: {{ .GlobalRateLimits.IngestionBurstSizeBytes }}

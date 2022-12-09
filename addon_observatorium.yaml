@@ -18,7 +18,8 @@ kind: ServiceAccount
 metadata:
   annotations:
     # https://docs.openshift.com/container-platform/4.11/authentication/using-service-accounts-as-oauth-client.html
-    serviceaccounts.openshift.io/oauth-redirectreference.test-oidc: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"simplest"}}'
+    serviceaccounts.openshift.io/oauth-redirectreference.dev-collector: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"simplest"}}'
+    serviceaccounts.openshift.io/oauth-redirectreference.production-collector: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"simplest"}}'
   labels:
     app.kubernetes.io/component: api
     app.kubernetes.io/instance: observatorium-xyz
@@ -36,11 +37,13 @@ data:
           - "read-write"
         "subjects":
           - "kind": "user"
-            "name": "system:serviceaccount:ploffay:simplest-collector"
+            "name": "system:serviceaccount:ploffay:dev-collector"
+          - "kind": "user"
+            "name": "system:serviceaccount:ploffay:production-collector"
           - "kind": "user"
             "name": "kube:admin"
-          - "kind": "user"
-            "name": "developer"
+          - "kind": "group"
+            "name": "tempo-users"
           - "kind": "user"
             "name": "kubeadmin"
     "roles":
@@ -49,11 +52,10 @@ data:
           - "read"
           - "write"
         "resources":
-          - "logs"
-          - "metrics"
           - "traces"
         "tenants":
-          - "test-oidc"
+          - "dev"
+          - "production"
 kind: ConfigMap
 metadata:
   labels:
@@ -105,10 +107,15 @@ stringData:
   tenants.yaml: |-
     "tenants":
     - "id": "1610b0c3-c509-4592-a256-a1871353dbfa"
-      "name": "test-oidc"
+      "name": "dev"
       "openshift":
         "serviceAccount": "observatorium-xyz-observatorium-api"
-        "redirectURL": "https://simplest-ploffay.apps-crc.testing/openshift/test-oidc/callback"
+        "redirectURL": "https://simplest-ploffay.apps-crc.testing/openshift/dev/callback"
+    - "id": "1715b0c3-c509-4592-a256-a1871353dbfa"
+      "name": "production"
+      "openshift":
+        "serviceAccount": "observatorium-xyz-observatorium-api"
+        "redirectURL": "https://simplest-ploffay.apps-crc.testing/openshift/production/callback"
 ---
 apiVersion: v1
 kind: Service
@@ -181,12 +188,13 @@ spec:
             - --web.listen=0.0.0.0:8080
             - --web.internal.listen=0.0.0.0:8081
             - --log.level=debug
+            - --traces.tenant-header=X-Scope-OrgID
             - --traces.write.endpoint=tempo-simplest-distributor:4317
             - --traces.read.endpoint=http://tempo-simplest-query-frontend:16686
             - --grpc.listen=0.0.0.0:8090
             - --rbac.config=/etc/observatorium/rbac.yaml
             - --tenants.config=/etc/observatorium/tenants.yaml
-          image: pavolloffay/observatorium-api:main-2022-11-29-v0.1.2-287-g0ad5c60-dirty4
+          image: pavolloffay/observatorium-api:main-2022-12-09-v0.1.2-291-ge43a8ef-dirty13
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 10
