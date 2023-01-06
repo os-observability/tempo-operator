@@ -1,0 +1,44 @@
+# kubectl port-forward service/observatorium-xyz-observatorium-api 8090:8090 8050:8080
+# docker run --rm -it --net=host -v $PWD:/tmp/conf ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector:0.61.0 --config /tmp/conf/addon_otelcol.yaml
+# access Jaeger UI: http://localhost:8050/api/traces/v1/test-oidc/search
+# it requires 192.168.49.2 hydra.hydra.svc.cluster.local in /etc/hosts - The IP address is minikube ip
+extensions:
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+  jaeger:
+    protocols:
+      thrift_binary:
+      thrift_compact:
+      thrift_http:
+      grpc:
+
+processors:
+
+exporters:
+  otlp:
+    endpoint: localhost:8090
+    compression: none
+    headers:
+      X-Tenant: "test-oidc"
+      # Get the token
+      # kubectl port-forward -n hydra service/hydra 4444:4444
+      # ./token-refresher --url=https://localhost:8090  --oidc.client-id=user --oidc.client-secret=secret --log.level=debug --oidc.issuer-url=http://localhost:4444/ --oidc.audience=tempo --file /tmp/token
+      # Or kubectl rollout restart deployment.apps/token-refresher && sleep 4 && kubectl exec -it deployment.apps/token-refresher -- /bin/cat /tmp/token
+
+      # Get token when dex is used
+      # kubectl port-forward -n dex dex-85bb4b8f7f-jrjl5  5556:5556
+      # curl -H "Content-Type: application/x-www-form-urlencoded" --data-urlencode "grant_type=password" --data-urlencode "username=admin@example.com" --data-urlencode "password=password" --data-urlencode "client_id=test" --data-urlencode "client_secret=ZXhhbXBsZS1hcHAtc2VjcmV0" --data-urlencode "scope= openid email" localhost:5556/dex/token
+#      Authorization: "bearer"
+      Authorization: "bearer eyJhbGciOiJSUzI1NiIsImtpZCI6Ijg5ZTU5NjgyYTMwNzJhNDRkODExMTNjOTM0Yjc5NjhjODRmN2M5YTYifQ.eyJpc3MiOiJodHRwOi8vZGV4LmRleC5zdmMuY2x1c3Rlci5sb2NhbDozMDU1Ni9kZXgiLCJzdWIiOiJDaVF3T0dFNE5qZzBZaTFrWWpnNExUUmlOek10T1RCaE9TMHpZMlF4TmpZeFpqVTBOallTQld4dlkyRnMiLCJhdWQiOiJ0ZXN0IiwiZXhwIjoxNjY2MTg0MTU1LCJpYXQiOjE2NjYwOTc3NTUsImF0X2hhc2giOiJha3JtTmFXVXk0SUJvbl9XQlJicG5RIiwiZW1haWwiOiJhZG1pbkBleGFtcGxlLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlfQ.k9GXezONHoEQRt2WoysJLCMDfqwmuk7XFTvEpWoxxbvoUOzZx6BGY0Lyh_IGoq3-PHr-qKwY34tOLSYlVM1yCi7PdC8W6o2ldlJVRywticYQIGir32Gur-v_cKODEBKui4M-Im3ocPSZEz2vZCeJ98tC4CTtcw1kA7AmShxaPp97xaWdxjajwVwu86dEUQfp9mSgdLNWlReautZflig_w9sCMbrRdyqxU9nqmLPamqePoVWpo2Gvtz_wQ4d4_qg-9045nnl634-7jpHo362RpAg79VLvotQIlAmjEanFo0dVdzqaP25t9pRNRNBqb49gEkfYnVK1xbvq6mNcsgf1cA"
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp, jaeger]
+      exporters: [otlp]
