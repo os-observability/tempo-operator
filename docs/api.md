@@ -160,6 +160,13 @@ MicroservicesSpec defines the desired state of Microservices.
           NOTE: currently this field is not considered. Components defines requirements for a set of tempo components.<br/>
         </td>
         <td>false</td>
+      </tr><tr>
+        <td><b><a href="#microservicesspectenants">tenants</a></b></td>
+        <td>object</td>
+        <td>
+          Tenants defines the per-tenant authentication and authorization spec.<br/>
+        </td>
+        <td>false</td>
       </tr></tbody>
 </table>
 
@@ -218,7 +225,7 @@ TLS configuration for reaching the object storage endpoint.
         <td><b>caName</b></td>
         <td>string</td>
         <td>
-          CA is the name of a ConfigMap containing a CA certificate. It needs to be in the same namespace as the LokiStack custom resource.<br/>
+          CA is the name of a ConfigMap containing a CA certificate. It needs to be in the same namespace as the (Tempo) Microservices custom resource.<br/>
         </td>
         <td>false</td>
       </tr></tbody>
@@ -742,7 +749,7 @@ NOTE: currently this field is not considered. Components defines requirements fo
         <td><b><a href="#microservicesspectemplatecompactor">compactor</a></b></td>
         <td>object</td>
         <td>
-          Compactor defines the lokistack compactor component spec.<br/>
+          Compactor defines the tempo compactor component spec.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -750,6 +757,13 @@ NOTE: currently this field is not considered. Components defines requirements fo
         <td>object</td>
         <td>
           Distributor defines the distributor component spec.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#microservicesspectemplategateway">gateway</a></b></td>
+        <td>object</td>
+        <td>
+          Gateway defines the gateway component spec.<br/>
         </td>
         <td>false</td>
       </tr><tr>
@@ -782,7 +796,7 @@ NOTE: currently this field is not considered. Components defines requirements fo
 
 
 
-Compactor defines the lokistack compactor component spec.
+Compactor defines the tempo compactor component spec.
 
 <table>
     <thead>
@@ -922,6 +936,106 @@ Distributor defines the distributor component spec.
 
 ### Microservices.spec.template.distributor.tolerations[index]
 <sup><sup>[↩ Parent](#microservicesspectemplatedistributor)</sup></sup>
+
+
+
+The pod this Toleration is attached to tolerates any taint that matches the triple <key,value,effect> using the matching operator <operator>.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>effect</b></td>
+        <td>string</td>
+        <td>
+          Effect indicates the taint effect to match. Empty means match all taint effects. When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>key</b></td>
+        <td>string</td>
+        <td>
+          Key is the taint key that the toleration applies to. Empty means match all taint keys. If the key is empty, operator must be Exists; this combination means to match all values and all keys.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>operator</b></td>
+        <td>string</td>
+        <td>
+          Operator represents a key's relationship to the value. Valid operators are Exists and Equal. Defaults to Equal. Exists is equivalent to wildcard for value, so that a pod can tolerate all taints of a particular category.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>tolerationSeconds</b></td>
+        <td>integer</td>
+        <td>
+          TolerationSeconds represents the period of time the toleration (which must be of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default, it is not set, which means tolerate the taint forever (do not evict). Zero and negative values will be treated as 0 (evict immediately) by the system.<br/>
+          <br/>
+            <i>Format</i>: int64<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>value</b></td>
+        <td>string</td>
+        <td>
+          Value is the taint value the toleration matches to. If the operator is Exists, the value should be empty, otherwise just a regular string.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.template.gateway
+<sup><sup>[↩ Parent](#microservicesspectemplate)</sup></sup>
+
+
+
+Gateway defines the gateway component spec.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>nodeSelector</b></td>
+        <td>map[string]string</td>
+        <td>
+          NodeSelector is the simplest recommended form of node selection constraint.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>replicas</b></td>
+        <td>integer</td>
+        <td>
+          Replicas represents the number of replicas to create for this component.<br/>
+          <br/>
+            <i>Format</i>: int32<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#microservicesspectemplategatewaytolerationsindex">tolerations</a></b></td>
+        <td>[]object</td>
+        <td>
+          Tolerations defines component specific pod tolerations.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.template.gateway.tolerations[index]
+<sup><sup>[↩ Parent](#microservicesspectemplategateway)</sup></sup>
 
 
 
@@ -1336,5 +1450,365 @@ JaegerQuerySpec defines Jaeger Query spefic options.
           Enabled is used to define if Jaeger Query component should be created.<br/>
         </td>
         <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.tenants
+<sup><sup>[↩ Parent](#microservicesspec)</sup></sup>
+
+
+
+Tenants defines the per-tenant authentication and authorization spec.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>mode</b></td>
+        <td>enum</td>
+        <td>
+          Mode defines the multitenancy mode.<br/>
+          <br/>
+            <i>Enum</i>: openshift<br/>
+            <i>Default</i>: openshift<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#microservicesspectenantsauthenticationindex">authentication</a></b></td>
+        <td>[]object</td>
+        <td>
+          Authentication defines the tempo-gateway component authentication configuration spec per tenant.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#microservicesspectenantsauthorization">authorization</a></b></td>
+        <td>object</td>
+        <td>
+          Authorization defines the tempo-gateway component authorization configuration spec per tenant.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.tenants.authentication[index]
+<sup><sup>[↩ Parent](#microservicesspectenants)</sup></sup>
+
+
+
+AuthenticationSpec defines the oidc configuration per tenant for tempo Gateway component.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#microservicesspectenantsauthenticationindexoidc">oidc</a></b></td>
+        <td>object</td>
+        <td>
+          OIDC defines the spec for the OIDC tenant's authentication.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>tenantId</b></td>
+        <td>string</td>
+        <td>
+          TenantID defines the id of the tenant.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>tenantName</b></td>
+        <td>string</td>
+        <td>
+          TenantName defines the name of the tenant.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.tenants.authentication[index].oidc
+<sup><sup>[↩ Parent](#microservicesspectenantsauthenticationindex)</sup></sup>
+
+
+
+OIDC defines the spec for the OIDC tenant's authentication.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>issuerURL</b></td>
+        <td>string</td>
+        <td>
+          IssuerURL defines the URL for issuer.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#microservicesspectenantsauthenticationindexoidcsecret">secret</a></b></td>
+        <td>object</td>
+        <td>
+          Secret defines the spec for the clientID, clientSecret and issuerCAPath for tenant's authentication.<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>groupClaim</b></td>
+        <td>string</td>
+        <td>
+          Group claim field from ID Token<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>redirectURL</b></td>
+        <td>string</td>
+        <td>
+          RedirectURL defines the URL for redirect.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b>usernameClaim</b></td>
+        <td>string</td>
+        <td>
+          User claim field from ID Token<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.tenants.authentication[index].oidc.secret
+<sup><sup>[↩ Parent](#microservicesspectenantsauthenticationindexoidc)</sup></sup>
+
+
+
+Secret defines the spec for the clientID, clientSecret and issuerCAPath for tenant's authentication.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          Name of a secret in the namespace configured for tenant secrets.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.tenants.authorization
+<sup><sup>[↩ Parent](#microservicesspectenants)</sup></sup>
+
+
+
+Authorization defines the tempo-gateway component authorization configuration spec per tenant.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b><a href="#microservicesspectenantsauthorizationopa">opa</a></b></td>
+        <td>object</td>
+        <td>
+          OPA defines the spec for the third-party endpoint for tenant's authorization.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#microservicesspectenantsauthorizationrolebindingsindex">roleBindings</a></b></td>
+        <td>[]object</td>
+        <td>
+          RoleBindings defines configuration to bind a set of roles to a set of subjects.<br/>
+        </td>
+        <td>false</td>
+      </tr><tr>
+        <td><b><a href="#microservicesspectenantsauthorizationrolesindex">roles</a></b></td>
+        <td>[]object</td>
+        <td>
+          Roles defines a set of permissions to interact with a tenant.<br/>
+        </td>
+        <td>false</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.tenants.authorization.opa
+<sup><sup>[↩ Parent](#microservicesspectenantsauthorization)</sup></sup>
+
+
+
+OPA defines the spec for the third-party endpoint for tenant's authorization.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>url</b></td>
+        <td>string</td>
+        <td>
+          URL defines the third-party endpoint for authorization.<br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.tenants.authorization.roleBindings[index]
+<sup><sup>[↩ Parent](#microservicesspectenantsauthorization)</sup></sup>
+
+
+
+RoleBindingsSpec binds a set of roles to a set of subjects.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>roles</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b><a href="#microservicesspectenantsauthorizationrolebindingsindexsubjectsindex">subjects</a></b></td>
+        <td>[]object</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.tenants.authorization.roleBindings[index].subjects[index]
+<sup><sup>[↩ Parent](#microservicesspectenantsauthorizationrolebindingsindex)</sup></sup>
+
+
+
+Subject represents a subject that has been bound to a role.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>kind</b></td>
+        <td>enum</td>
+        <td>
+          SubjectKind is a kind of Tempo Gateway RBAC subject.<br/>
+          <br/>
+            <i>Enum</i>: user, group<br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr></tbody>
+</table>
+
+
+### Microservices.spec.tenants.authorization.roles[index]
+<sup><sup>[↩ Parent](#microservicesspectenantsauthorization)</sup></sup>
+
+
+
+RoleSpec describes a set of permissions to interact with a tenant.
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody><tr>
+        <td><b>name</b></td>
+        <td>string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>permissions</b></td>
+        <td>[]enum</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>resources</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
+      </tr><tr>
+        <td><b>tenants</b></td>
+        <td>[]string</td>
+        <td>
+          <br/>
+        </td>
+        <td>true</td>
       </tr></tbody>
 </table>
