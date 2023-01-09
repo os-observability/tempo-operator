@@ -194,7 +194,7 @@ spec:
             - --grpc.listen=0.0.0.0:8090
             - --rbac.config=/etc/observatorium/rbac.yaml
             - --tenants.config=/etc/observatorium/tenants.yaml
-          image: pavolloffay/observatorium-api:main-2022-12-09-v0.1.2-291-ge43a8ef-dirty14
+          image: pavolloffay/api:poc-tempo-ocp-auth-2023-01-06-v0.1.2-308-g74aac32
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 10
