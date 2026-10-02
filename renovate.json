@@ -1,0 +1,5 @@
+{
+  "extends": ["security:only-security-updates"],
+  "automerge": true,
+  "automergeStrategy": "squash"
+}
